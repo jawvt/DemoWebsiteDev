@@ -1,87 +1,88 @@
+
 PSK Golf League — Demo App
 ==========================
 
 Overview
 --------
-This is a single-file demo web app for the PSK Golf League. It implements:
-- Weekly round declarations
-- Hole-by-hole score submissions (9 holes)
-- Optional scorecard photo upload (stored as data URL in demo)
-- Leaderboard based on lowest cumulative strokes across a 6-week season
+This project is a Vite + React + TypeScript scaffold for the PSK Golf League web app. It uses Tailwind CSS for styling and includes mock authentication and client-side persistence (localStorage).
 
-Files
------
-- `index.html` — single-file app (UI + client-side storage).
+Quick start (run locally)
+-------------------------
+Requirements:
+- Node.js 16+ and npm (or yarn)
 
-Where data goes (current demo)
------------------------------
-All app data is stored locally in the browser using `localStorage` under the key `psk_golf_data`.
-Structure (JSON):
-- `declarations`: array of { player, week, declaredAt }
-- `submissions`: array of { player, week, holes: [9 numbers], photo: dataURL|null, submittedAt }
-
-Notes about demo behavior:
-- Missed weeks are treated as a score of 63 (triple-bogey average) when computing season totals.
-- Commissioner (demo-only) unlock is toggled with the demo password `pskcomm`. This is insecure — replace or remove for production.
-
-Running locally
----------------
-Open `index.html` in any modern browser (double-click the file or serve it from a static server).
-For a quick static server (Node installed):
+Install dependencies and run the dev server:
 
 ```bash
-# from project root
-npx http-server . -o
+cd /path/to/DemoWebsiteDev
+npm install
+npm run dev
 ```
 
-Production (recommended approach)
---------------------------------
-LocalStorage is fine for testing, but for multiple users and persistence you'll need a backend.
-Recommended production options:
+Open http://localhost:5173 in your browser.
 
-1) Firebase (Realtime/Firestore + Storage)
-   - Use Firebase Authentication for sign-in (email or OAuth).
-   - Save submissions/declarations in Firestore.
-   - Upload photos to Firebase Storage and store download URLs in Firestore.
+If you need a different port:
 
-2) Supabase
-   - Use Supabase Auth for users.
-   - Store rows in Postgres (Supabase) and photos in Supabase Storage.
+```bash
+npm run dev -- --port 3000
+```
 
-3) Custom API + relational DB (Postgres/MySQL)
-   - Endpoints: `POST /api/declare`, `POST /api/submit`, `GET /api/leaderboard`, `GET /api/player/:id`
-   - Store photos in object storage (S3, DigitalOcean Spaces) and store URLs in DB.
-   - Secure commissioner actions via server-side roles and authentication.
+Build and preview production bundle:
 
-Security & Integrity
---------------------
-- Move commissioner privilege checks to the server; do not rely on client-side password.
-- Validate score submissions server-side (e.g., holes length = 9, reasonable values).
-- Consider adding an audit log for edits made by commissioners.
-- For photo evidence, accept images server-side and optionally run basic image validation.
+```bash
+npm run build
+npm run preview
+# or serve the `dist` folder using a static server: npx serve dist
+```
 
-Data migration and export
--------------------------
-To export existing local demo data for migration to a server, open the browser console and run:
+Project structure
+-----------------
+- `index.html` — Vite entry (mounts React at `#root`)
+- `src/` — React + TypeScript source
+  - `pages/` — application pages (Landing, Login, Register, Dashboard, Declare, Submit, Leaderboard, Rules)
+  - `components/` — shared components
+  - `contexts/` — `AuthContext` (demo auth)
+  - `lib/` — localStorage helpers
+  - `data/` — sample mock data
+
+Local demo data
+---------------
+- App data is stored in `localStorage` under the key `psk_golf_data`.
+  - `declarations`: array of { playerId, playerName, week, declaredAt }
+  - `submissions`: array of { playerId, playerName, week, holes, photo?, submittedAt }
+- Demo auth user is stored in `localStorage` under `psk_auth`.
+
+Reset demo data (in browser console)
+----------------------------------
+You can clear the demo data from the browser console:
 
 ```js
-console.log(localStorage.getItem('psk_golf_data'))
+localStorage.removeItem('psk_golf_data')
+localStorage.removeItem('psk_auth')
 ```
 
-Then parse the JSON and POST it to your new API for import.
+Security & production notes
+--------------------------
+- This project uses demo (client-side) auth. Do NOT use the demo commissioner password or client-side checks in production.
+- Recommended production options: Firebase (Auth + Firestore + Storage), Supabase, or a custom API + Postgres/MySQL and object storage (S3).
+- Move commissioner permissions and score editing to server-side, validate submissions server-side, and add audit logs.
 
-Next steps (suggested)
-----------------------
-- Add user authentication (email or OAuth).
-- Implement a simple server API with persistent DB and secure commissioner endpoints.
-- Replace client-side photo storage (data URLs) with server uploads to object storage.
-- Add admin UI for commissioner score edits and dispute resolution.
+Developer notes
+---------------
+- To change the Vite dev server port, pass `--port` as shown above or edit `vite.config.ts`.
+- Tailwind config is in `tailwind.config.cjs`; styles are in `src/index.css`.
 
-Contact
--------
+What's on hold
+--------------
+- Backend scaffolding is currently on hold per project direction. When ready I can scaffold an Express + Postgres API or integrate Firebase/Supabase.
+
+Contact / Next steps
+--------------------
 If you want, I can:
 - Scaffold a minimal Express + Postgres API for this app,
-- Or integrate with Firebase/Supabase and update `index.html` to call the service.
+- Or integrate with Firebase/Supabase and update the app to use it.
+
+(README updated with launch instructions)
 
 
  (README generated by your assistant)
