@@ -8,4 +8,231 @@
 <body>
     <h1>test</h1>
 </body>
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>PSK Golf League</title>
+        <style>
+            :root{--cardinal:#C41E3A;--silver:#C0C0C0;--bg:#f7f7f8;--text:#222}
+            body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:var(--bg); color:var(--text); margin:0; padding:24px}
+            header{display:flex;align-items:center;gap:16px}
+            .brand{display:flex;flex-direction:column}
+            h1{margin:0;color:var(--cardinal)}
+            .subtitle{color:#555;font-size:0.95rem}
+            .layout{display:grid;grid-template-columns:1fr 420px;gap:20px;margin-top:20px}
+            .card{background:#fff;border-radius:10px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+            label{display:block;font-size:0.85rem;margin-top:8px}
+            input,select,button{font-size:1rem;padding:8px;border-radius:6px;border:1px solid #ddd;width:100%;box-sizing:border-box}
+            button.primary{background:var(--cardinal);color:#fff;border:0}
+            .small{font-size:0.9rem}
+            table{width:100%;border-collapse:collapse;margin-top:12px}
+            th,td{padding:8px;text-align:left;border-bottom:1px solid #eee}
+            .muted{color:#666;font-size:0.9rem}
+            .danger{color:#a00}
+            footer{margin-top:18px;color:#666;font-size:0.85rem}
+            .rules{max-height:260px;overflow:auto;padding-right:8px}
+            .photo-preview{max-width:100%;border-radius:6px;margin-top:8px}
+            code.inline{background:#f1f1f1;padding:2px 6px;border-radius:4px;font-family:monospace}
+        </style>
+    </head>
+    <body>
+        <header>
+            <div style="width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--cardinal),#800b1a);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">PSK</div>
+            <div class="brand">
+                <h1>PSK Golf League</h1>
+                <div class="subtitle">Season: 6 weeks • Virginia Tech 9‑Hole • Stroke play</div>
+            </div>
+        </header>
+
+        <div class="layout">
+            <main>
+                <section class="card">
+                    <strong>League Rules (summary)</strong>
+                    <div class="rules">
+                        <ol>
+                            <li>Season length: 6 weeks. One 9‑hole round per player per week.</li>
+                            <li>Declare your round before teeing off; only declared rounds are eligible.</li>
+                            <li>Submit hole‑by‑hole scores by Sunday 11:59 PM. Late submissions rejected.</li>
+                            <li>Missed round = penalty of 63 strokes. Missing &gt;2 weeks disqualifies prize eligibility.</li>
+                            <li>Commissioners (Alex & Jeb) can edit scores and make final decisions.</li>
+                            <li>Leaderboard ranks by lowest cumulative strokes after 6 weeks.</li>
+                        </ol>
+                    </div>
+                </section>
+
+                <section class="card" style="margin-top:16px">
+                    <strong>Declare Weekly Round</strong>
+                    <div class="small muted">You must declare before playing. One declaration per player per week.</div>
+                    <label>Player name</label>
+                    <input id="declare-player" placeholder="Your name" />
+                    <label>Week</label>
+                    <select id="declare-week"></select>
+                    <button id="declare-btn" class="primary" style="margin-top:10px">Declare Round</button>
+                    <div id="declare-msg" class="muted" style="margin-top:8px"></div>
+                </section>
+
+                <section class="card" style="margin-top:16px">
+                    <strong>Submit Scores</strong>
+                    <div class="small muted">Hole‑by‑hole scores required. Must have declared this week first.</div>
+                    <label>Player name</label>
+                    <input id="submit-player" placeholder="Your name" />
+                    <label>Week</label>
+                    <select id="submit-week"></select>
+                    <div id="holes-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px"></div>
+                    <label>Optional: scorecard photo</label>
+                    <input type="file" id="photo-input" accept="image/*" />
+                    <img id="photo-preview" class="photo-preview" style="display:none" />
+                    <button id="submit-btn" class="primary" style="margin-top:10px">Submit Score</button>
+                    <div id="submit-msg" class="muted" style="margin-top:8px"></div>
+                </section>
+
+            </main>
+
+            <aside>
+                <section class="card">
+                    <strong>Leaderboard</strong>
+                    <div class="muted small">Ranks by lowest cumulative strokes (missed = 63)</div>
+                    <div id="leaderboard"></div>
+                </section>
+
+                <section class="card" style="margin-top:16px">
+                    <strong>Commissioner Controls</strong>
+                    <div class="muted small">Enter commissioner password to edit submissions.</div>
+                    <label>Password</label>
+                    <input id="comm-pass" type="password" placeholder="commissioner password" />
+                    <button id="comm-toggle" style="margin-top:8px">Unlock</button>
+                    <div id="comm-msg" class="muted" style="margin-top:8px"></div>
+                </section>
+
+                <section class="card" style="margin-top:16px">
+                    <strong>Data: where it goes</strong>
+                    <div class="muted small">This demo stores all data locally in the browser's <code class="inline">localStorage</code> under key <code class="inline">psk_golf_data</code>. Production options: API + DB (Postgres/MySQL), Firebase, Supabase; photos → object storage (S3).</div>
+                </section>
+            </aside>
+        </div>
+
+        <footer>
+            By participating, players agree to the rules. Commissioners: Alex & Jeb.
+        </footer>
+
+        <script>
+            // Simple single-file app storing data in localStorage under 'psk_golf_data'.
+            // Production notes:
+            // - Replace localStorage calls with API calls to your backend (POST/GET).
+            // - Store photos in object storage and save URLs in DB.
+            // - Secure commissioner actions server-side with auth.
+            const SEASON_WEEKS = 6;
+            const STORAGE_KEY = 'psk_golf_data';
+
+            function defaultData(){ return { submissions: [], declarations: [] }; }
+            function load(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultData() }catch(e){ return defaultData() } }
+            function save(d){ localStorage.setItem(STORAGE_KEY, JSON.stringify(d)) }
+
+            const state = { data: load(), commMode:false };
+
+            function setupUI(){
+                const declareWeek = document.getElementById('declare-week');
+                const submitWeek = document.getElementById('submit-week');
+                for(let w=1; w<=SEASON_WEEKS; w++){ declareWeek.appendChild(new Option('Week '+w,w)); submitWeek.appendChild(new Option('Week '+w,w)); }
+
+                const holesGrid = document.getElementById('holes-grid');
+                for(let h=1; h<=9; h++){
+                    const div = document.createElement('div');
+                    div.innerHTML = `<label>Hole ${h}</label><input type="number" min="1" max="15" data-hole="${h}" />`;
+                    holesGrid.appendChild(div);
+                }
+
+                document.getElementById('declare-btn').onclick = declareRound;
+                document.getElementById('submit-btn').onclick = submitScore;
+                document.getElementById('photo-input').onchange = handlePhoto;
+                document.getElementById('comm-toggle').onclick = toggleCommissioner;
+
+                renderLeaderboard();
+            }
+
+            function declareRound(){
+                const player = document.getElementById('declare-player').value.trim();
+                const week = Number(document.getElementById('declare-week').value);
+                const msg = document.getElementById('declare-msg');
+                if(!player){ msg.textContent='Enter your name.'; return; }
+                const exists = state.data.declarations.find(d=>d.player.toLowerCase()===player.toLowerCase() && d.week===week);
+                if(exists){ msg.textContent='You already declared for this week.'; return; }
+                state.data.declarations.push({player,week,declaredAt:new Date().toISOString()});
+                save(state.data);
+                msg.textContent='Declared. Good luck!';
+                renderLeaderboard();
+            }
+
+            let photoDataURL = null;
+            function handlePhoto(e){
+                const f = e.target.files[0];
+                if(!f) return;
+                const reader = new FileReader();
+                reader.onload = ()=>{ photoDataURL = reader.result; const img=document.getElementById('photo-preview'); img.src=photoDataURL; img.style.display='block'; }
+                reader.readAsDataURL(f);
+            }
+
+            function submitScore(){
+                const player = document.getElementById('submit-player').value.trim();
+                const week = Number(document.getElementById('submit-week').value);
+                const msg = document.getElementById('submit-msg');
+                if(!player){ msg.textContent='Enter your name.'; return; }
+                const declared = state.data.declarations.find(d=>d.player.toLowerCase()===player.toLowerCase() && d.week===week);
+                if(!declared && !state.commMode){ msg.textContent='You must declare this week before submitting.'; return; }
+                const holes = Array.from(document.querySelectorAll('#holes-grid input')).map(i=> Number(i.value)||0);
+                if(holes.some(h=>h<=0)){ msg.textContent='Enter scores for all 9 holes.'; return; }
+                state.data.submissions = state.data.submissions.filter(s=>!(s.player.toLowerCase()===player.toLowerCase() && s.week===week));
+                state.data.submissions.push({ player, week, holes, photo:photoDataURL, submittedAt:new Date().toISOString() });
+                save(state.data);
+                msg.textContent='Score submitted. Thank you.';
+                photoDataURL = null; document.getElementById('photo-preview').style.display='none'; document.getElementById('photo-input').value='';
+                renderLeaderboard();
+            }
+
+            function computePlayerTotals(){
+                const players = new Set();
+                state.data.declarations.forEach(d=>players.add(d.player));
+                state.data.submissions.forEach(s=>players.add(s.player));
+                const result = [];
+                players.forEach(p=>{
+                    let total = 0;
+                    const weeks = [];
+                    for(let w=1; w<=SEASON_WEEKS; w++){
+                        const sub = state.data.submissions.find(s=>s.player.toLowerCase()===p.toLowerCase() && s.week===w);
+                        if(sub){ const sum = sub.holes.reduce((a,b)=>a+b,0); weeks.push({week:w,score:sum}); total += sum; }
+                        else{ weeks.push({week:w,score:63}); total += 63; }
+                    }
+                    result.push({player:p,total,weeks});
+                });
+                return result.sort((a,b)=>a.total-b.total);
+            }
+
+            function renderLeaderboard(){
+                const el = document.getElementById('leaderboard');
+                const rows = computePlayerTotals();
+                if(rows.length===0){ el.innerHTML='<div class="muted">No submissions yet.</div>'; return; }
+                let html = '<table><thead><tr><th>Rank</th><th>Player</th><th>Total</th></tr></thead><tbody>';
+                rows.forEach((r,i)=> html += `<tr><td>${i+1}</td><td>${escapeHtml(r.player)}</td><td>${r.total}</td></tr>`);
+                html += '</tbody></table>';
+                el.innerHTML = html;
+            }
+
+            function toggleCommissioner(){
+                const pass = document.getElementById('comm-pass').value;
+                const msg = document.getElementById('comm-msg');
+                // Demo password - change in production and secure server-side
+                if(pass==='pskcomm'){ state.commMode = !state.commMode; msg.textContent = state.commMode ? 'Commissioner mode ON' : 'Commissioner mode OFF'; document.getElementById('comm-toggle').textContent = state.commMode? 'Lock':'Unlock'; }
+                else { msg.textContent='Invalid password'; }
+            }
+
+            function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+            setupUI();
+
+            // For quick debugging in browser console:
+            window.__psk = { state, load, save, computePlayerTotals };
+        </script>
+    </body>
 </html>
